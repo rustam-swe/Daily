@@ -1,10 +1,19 @@
-<?php
+<form action="Daily.php" method="post">
 
-declare(strict_types=1);
+    Kelish vaqti <input type="time" name="time_arrived"> <br><br>
+    Ketish vaqti <input type="time" name="time_leaved"> <br><br>
+
+    <button>Hisobla</button>
+
+</form>
+
+
+
+<?php
 
 class Daily
 {
-    const int WORK_DURATION = 540;
+    const WORK_DURATION = 9 * 60; // 9 soat = 540 minut
 
     public string $date;
     public string $arrivedAt;
@@ -14,11 +23,35 @@ class Daily
         string $date,
         string $arrivedAt,
         string $leavedAt
-    ) {
+    ): void {
+        $arrivedAt = DateTime::createFromFormat('H:i', $arrivedAt);
+        $leavedAt = DateTime::createFromFormat('H:i', $leavedAt);
+
         $dailyWorkingHours = $leavedAt->diff($arrivedAt);
+
+        $workedMinutes = ($dailyWorkingHours->h * 60) + $dailyWorkingHours->i;
+
+        $this->date = $date;
+        $this->arrivedAt = $arrivedAt->format('H:i');
+        $this->leavedAt = $leavedAt->format('H:i');
+
+        $workOffMinutes = self::WORK_DURATION - $workedMinutes;
+        $workOffHours = floor($workOffMinutes / 60);
+        $workOffRemainingMinutes = $workOffMinutes % 60;
+
+        echo "Sana: {$this->date}<br>";
+        echo "Kelish vaqti: {$this->arrivedAt}<br>";
+        echo "Ketish vaqti: {$this->leavedAt}<br>";
+        echo "Ish vaqti davomiyligi: {$dailyWorkingHours->format('%H:%I:%S')}<br>";
+        echo "Qarzingiz: {$workOffHours} soat va {$workOffRemainingMinutes} daqiqa<br>";
     }
 }
 
-$today = new Daily();
-$today->calculate('20.06.2024', '11:00:00', '16:00:00');
+if ($_SERVER['REQUEST_METHOD'] == 'POST') {
+    $date = date('Y-m-d');
+    $arrivedAt = $_POST['time_arrived'];
+    $leavedAt = $_POST['time_leaved'];
 
+    $today = new Daily();
+    $today->calculate($date, $arrivedAt, $leavedAt);
+}
